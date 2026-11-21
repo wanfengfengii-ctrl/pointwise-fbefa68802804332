@@ -38,6 +38,8 @@ def encode_finalized(report: FinalizedReport) -> bytes:
 
 def decode_finalized(payload: bytes) -> FinalizedReport:
     obj = parse_json(payload)
+    if not isinstance(obj, dict) or 'kind' in obj:
+        raise ValueError('not a point-tolerance report')
     left, right = obj['sources']
     return FinalizedReport(
         obj['report_id'], unpack_fraction(obj['tolerance']), obj['threshold'],

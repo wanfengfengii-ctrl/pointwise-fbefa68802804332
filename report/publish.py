@@ -5,6 +5,7 @@ from receive.selection import SelectedReceipts
 from report.export import FinalizedReport, PublicationReceipt, encode_finalized
 from report.ledger import ReportLedger
 from report.provenance import make_parent_sources
+from report.range_report import RangeReport, encode_range_report
 
 
 def publish_report(ledger: ReportLedger, selected: SelectedReceipts, tolerance: Fraction,
@@ -14,4 +15,14 @@ def publish_report(ledger: ReportLedger, selected: SelectedReceipts, tolerance: 
     finalized = FinalizedReport(report_id, tolerance, threshold, counts, waiver,
                                 make_parent_sources(selected), receipt)
     ledger.commit_publication(report_id, receipt.receipt_id, encode_finalized(finalized))
+    return finalized
+
+
+def publish_range_report(ledger: ReportLedger, selected: SelectedReceipts, lower: Fraction,
+                         upper: Fraction, threshold: int, spectrum: tuple) -> RangeReport:
+    report_id = f'report-{uuid4().hex}'
+    receipt = PublicationReceipt(f'publication-{uuid4().hex}', report_id)
+    finalized = RangeReport(report_id, lower, upper, threshold, spectrum,
+                            make_parent_sources(selected), receipt)
+    ledger.commit_publication(report_id, receipt.receipt_id, encode_range_report(finalized))
     return finalized

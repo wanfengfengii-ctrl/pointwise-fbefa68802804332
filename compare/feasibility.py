@@ -179,3 +179,19 @@ def build_product_domain(left: StationEvidence, right: StationEvidence) -> Produ
 
 def is_region_feasible(domain: ProductDomain, bounds=()) -> bool:
     return domain.region.restrict(tuple(bounds)) is not None
+
+
+def tolerance_lifted_region(domain: ProductDomain, lower: Fraction, upper: Fraction) -> _Region:
+    # Lift the product domain into (point, tolerance) space: the cartesian
+    # product of the domain with the closed window [lower, upper]. The
+    # tolerance is appended as the last coordinate. Requires lower < upper.
+    if not lower < upper:
+        raise ValueError('lifting requires a nonempty tolerance window')
+    base = domain.region
+    low_bit = 1 << base.next_face
+    high_bit = 1 << (base.next_face + 1)
+    vertices = []
+    for vertex in base.vertices:
+        vertices.append(_Vertex(vertex.point + (lower,), vertex.faces | low_bit))
+        vertices.append(_Vertex(vertex.point + (upper,), vertex.faces | high_bit))
+    return _Region(tuple(vertices), base.next_face + 2)
